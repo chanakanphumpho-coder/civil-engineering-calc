@@ -656,17 +656,15 @@
             const r = bendRadius;
             const overlap = 0.15;
 
-            const c1_start = new THREE.Vector3(-hw + r, 0, -hd);
-            const c1_center = new THREE.Vector3(-hw, 0, -hd);
+            const startPt = new THREE.Vector3(-hw + r, 0, -hd + 0.005);
+            const endPt = new THREE.Vector3(-hw + r + overlap, 0, -hd + 0.005);
+
             const c2_start = new THREE.Vector3(hw - r, 0, -hd);
             const c2_center = new THREE.Vector3(hw, 0, -hd);
             const c2_end = new THREE.Vector3(hw, 0, -hd + r);
             const c3_start = new THREE.Vector3(hw, 0, hd - r);
             const c3_center = new THREE.Vector3(hw, 0, hd);
             const c3_end = new THREE.Vector3(hw, 0, hd - r);
-
-            const startPt = new THREE.Vector3(-hw + r, 0, -hd + 0.005);
-            const endPt = new THREE.Vector3(-hw + r + overlap, 0, -hd + 0.005);
 
             path.add(new THREE.LineCurve3(startPt, c2_start));
             path.add(new THREE.QuadraticBezierCurve3(c2_start, c2_center, c2_end));
@@ -764,7 +762,7 @@
                     rebarSubGroup.add(barMesh);
                 }
 
-                // Perimeter Side Tie
+                // Perimeter Side Tie (แก้ไขให้หมุนนอนราบไม่เอียง)
                 const pTieRadius = 0.0045;
                 const pTieW = type.b - 2 * cover - 0.01;
                 const pTieL = type.l - 2 * cover - 0.01;
@@ -772,6 +770,10 @@
                 
                 const perimGeo = createPerimeterTieGeometry(pTieW, pTieL, pTieRadius, pTieRadius * 3);
                 const perimMesh = new THREE.Mesh(perimGeo, pTieMat);
+                
+                // หมุนแกน X ให้เหล็กรัดรอบนอนราบขนานไปกับฐานราก
+                perimMesh.rotation.x = Math.PI / 2;
+                
                 perimMesh.position.set(posX, pTieY, posZ);
                 pTieSubGroup.add(perimMesh);
 
