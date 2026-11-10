@@ -227,7 +227,7 @@
                         <div class="flex items-center justify-between"><span class="text-amber-400 font-semibold">เหล็กปลอกเสา:</span> <span>งอขอ 135° Seismic Hook</span></div>
                         <div class="flex items-center justify-between"><span class="text-orange-400 font-semibold">เหล็กเดือยเสา:</span> <span>งอฉากเท้าเป็ด 90° L-Splice</span></div>
                         <div class="flex items-center justify-between"><span class="text-sky-400 font-semibold">เหล็กฐานราก:</span> <span>งอดัดขึ้นฉาก 90° (12d_b)</span></div>
-                        <div class="flex items-center justify-between"><span class="text-pink-400 font-semibold">เหล็กรัดรอบ:</span> <span>เหล็กรัดขอบฐานราก RB9</span></div>
+                        <div class="flex items-center justify-between"><span class="text-pink-400 font-semibold">เหล็กรัดรอบ:</span> <span>รัดขอบบนตะแกรงฐานราก (1-Ø9มม.)</span></div>
                     </div>
                 </div>
 
@@ -241,7 +241,7 @@
                         <button onclick="hideInfoCard()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
                     </div>
                     <div id="card-details-body" class="space-y-1.5 text-slate-300 border-t border-slate-700/60 pt-2.5">
-                        <!-- Dynamic details based on footing or beam selection -->
+                        <!-- Dynamic details -->
                     </div>
                 </div>
             </div>
@@ -365,7 +365,6 @@
             'F1.50x1.50': { b: 1.50, l: 1.50, h: 0.30, meshSpec: '7+7 DB16', perimTie: '1-RB9 รัดรอบ', mainBar: '6-DB16', tieSpec: 'RB9@0.15' }
         };
 
-        // Beam Type Definitions based on S-06
         const beamTypes = {
             'BX':  { w: 0.15, h: 0.30, top: '2-DB12', bot: '2-DB12', stirrup: 'RB6@0.20' },
             'B1':  { w: 0.20, h: 0.40, top: '2-DB12', bot: '2-DB12', stirrup: 'RB6@0.20' },
@@ -395,7 +394,6 @@
             { grid: 'A2', type: 'F0.60x0.60', col: 'C1',  xName: '2', zName: 'A' }
         ];
 
-        // Beams Data according to Plans (Ground, Floor 2, Roof)
         const beamsPlanData = [
             // --- Ground Floor Beams (Floor 1) ---
             { level: 1, type: 'B2',  x1: '1', z1: 'E', x2: '2', z2: 'E', tag: 'B2 (1-2/E)' },
@@ -412,6 +410,7 @@
             { level: 1, type: 'B4',  x1: '2', z1: 'C', x2: '2', z2: 'B', tag: 'B4 (2/C-B)' },
             { level: 1, type: 'B1',  x1: '3', z1: 'C', x2: '3', z2: 'B', tag: 'B1 (3/C-B)' },
             { level: 1, type: 'B2',  x1: '1', z1: 'B', x2: '2', z2: 'B', tag: 'B2 (1-2/B)' },
+            { level: 1, type: 'B2',  x1: '2', z1: 'B', x2: '3', z2: 'B', tag: 'B2 (2-3/B)' },
             { level: 1, type: 'B1',  x1: '1', z1: 'B', x2: '1', z2: 'A', tag: 'B1 (1/B-A)' },
             { level: 1, type: 'B1',  x1: '2', z1: 'B', x2: '2', z2: 'A', tag: 'B1 (2/B-A)' },
             { level: 1, type: 'B2',  x1: '1', z1: 'A', x2: '2', z2: 'A', tag: 'B2 (1-2/A)' },
@@ -459,7 +458,6 @@
             { level: 3, type: 'RB1', x1: '1', z1: 'A', x2: '2', z2: 'A', tag: 'RB1 (1-2/A)' }
         ];
 
-        // Global Scene Variables
         let scene, camera, renderer, controls;
         let interactiveObjects = [];
         let rebarGroup = new THREE.Group();
@@ -476,7 +474,6 @@
         let concreteOpacity = 0.35;
         let isMetallicMode = false;
 
-        // Shared PBR Materials
         let concreteMat, beamConcreteMat, mainRebarMat, tieRebarMat, meshRebarMat, perimTieMat, beamRebarMat, metallicRebarMat;
 
         window.onload = function() {
@@ -486,7 +483,6 @@
             animate();
         };
 
-        // --- 2. THREE.JS SCENE INITIALIZATION & FIXES ---
         function init3DScene() {
             const container = document.getElementById('view-3d');
             const canvas = document.getElementById('three-canvas');
@@ -515,7 +511,6 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
 
-            // Lights
             const ambient = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambient);
 
@@ -528,7 +523,6 @@
             fillLight.position.set(-25, 25, -25);
             scene.add(fillLight);
 
-            // Add Groups
             scene.add(concreteGroup);
             scene.add(rebarGroup);
             scene.add(beamRebarGroup);
@@ -538,23 +532,12 @@
             scene.add(roofBeamsGroup);
             scene.add(gridGroup);
 
-            // Materials
             concreteMat = new THREE.MeshStandardMaterial({
-                color: 0x38bdf8,
-                transparent: true,
-                opacity: concreteOpacity,
-                roughness: 0.2,
-                metalness: 0.1,
-                depthWrite: false
+                color: 0x38bdf8, transparent: true, opacity: concreteOpacity, roughness: 0.2, metalness: 0.1, depthWrite: false
             });
 
             beamConcreteMat = new THREE.MeshStandardMaterial({
-                color: 0x10b981,
-                transparent: true,
-                opacity: concreteOpacity,
-                roughness: 0.2,
-                metalness: 0.1,
-                depthWrite: false
+                color: 0x10b981, transparent: true, opacity: concreteOpacity, roughness: 0.2, metalness: 0.1, depthWrite: false
             });
 
             mainRebarMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.3, metalness: 0.7 });
@@ -575,7 +558,7 @@
             setTimeout(onWindowResize, 100);
         }
 
-        // --- 3. GEOMETRY GENERATORS WITH BEND RADIUS & HOOKS ---
+        // --- 3. GEOMETRY GENERATORS ---
         function createHookedBarGeometry(length, hookHeight, radius, bendRadius) {
             const path = new THREE.CurvePath();
             const halfL = length / 2;
@@ -649,34 +632,43 @@
             return new THREE.TubeGeometry(path, 36, radius, 6, false);
         }
 
-        function createPerimeterTieGeometry(w, d, radius, bendRadius) {
+        // สร้างเหล็กรัดรอบแนวนอน (วางบนสุดของตะแกรงฐานรากเพื่อรัดตัวเหลืองอขึ้น)
+        function createPerimeterHorizontalTieGeometry(w, d, radius, bendRadius) {
             const path = new THREE.CurvePath();
             const hw = w / 2;
             const hd = d / 2;
             const r = bendRadius;
             const overlap = 0.15;
 
-            const startPt = new THREE.Vector3(-hw + r, 0, -hd + 0.005);
-            const endPt = new THREE.Vector3(-hw + r + overlap, 0, -hd + 0.005);
+            const startPt = new THREE.Vector3(-hw + r, 0, -hd);
+            const endPt = new THREE.Vector3(-hw + r + overlap, 0, -hd);
 
             const c2_start = new THREE.Vector3(hw - r, 0, -hd);
             const c2_center = new THREE.Vector3(hw, 0, -hd);
             const c2_end = new THREE.Vector3(hw, 0, -hd + r);
+            
             const c3_start = new THREE.Vector3(hw, 0, hd - r);
             const c3_center = new THREE.Vector3(hw, 0, hd);
-            const c3_end = new THREE.Vector3(hw, 0, hd - r);
+            const c3_end = new THREE.Vector3(hw - r, 0, hd);
+
+            const c4_start = new THREE.Vector3(-hw + r, 0, hd);
+            const c4_center = new THREE.Vector3(-hw, 0, hd);
+            const c4_end = new THREE.Vector3(-hw, 0, hd - r);
 
             path.add(new THREE.LineCurve3(startPt, c2_start));
             path.add(new THREE.QuadraticBezierCurve3(c2_start, c2_center, c2_end));
             path.add(new THREE.LineCurve3(c2_end, c3_start));
             path.add(new THREE.QuadraticBezierCurve3(c3_start, c3_center, c3_end));
-            path.add(new THREE.LineCurve3(c3_end, new THREE.Vector3(-hw + r, 0, hd)));
-            path.add(new THREE.LineCurve3(new THREE.Vector3(-hw + r, 0, hd), endPt));
+            path.add(new THREE.LineCurve3(c3_end, c4_start));
+            path.add(new THREE.QuadraticBezierCurve3(c4_start, c4_center, c4_end));
+            path.add(new THREE.LineCurve3(c4_end, new THREE.Vector3(-hw, 0, -hd + r)));
+            path.add(new THREE.QuadraticBezierCurve3(new THREE.Vector3(-hw, 0, -hd + r), new THREE.Vector3(-hw, 0, -hd), startPt));
+            path.add(new THREE.LineCurve3(startPt, endPt));
 
             return new THREE.TubeGeometry(path, 40, radius, 6, false);
         }
 
-        // --- 4. BUILD 3D REBAR, COLUMNS & BEAMS ---
+        // --- 4. BUILD 3D MODEL ---
         function buildCompleteModel() {
             clearGroup(concreteGroup);
             clearGroup(rebarGroup);
@@ -690,35 +682,31 @@
             const colSize = 0.20;
             const cover = 0.04;
 
-            // 1. Build Footings, Stub Columns & Upper Columns
+            // 1. Build Footings & Columns
             foundationData.forEach(item => {
                 const type = footingTypes[item.type];
                 const posX = gridX[item.xName];
                 const posZ = gridZ[item.zName];
                 const posY = type.h / 2 - 0.2;
 
-                // Concrete Footing (ฐานราก)
                 const fGeo = new THREE.BoxGeometry(type.b, type.h, type.l);
                 const fMesh = new THREE.Mesh(fGeo, concreteMat);
                 fMesh.position.set(posX, posY, posZ);
                 fMesh.castShadow = true;
                 concreteGroup.add(fMesh);
 
-                // Stub Column Concrete (เสาตอม่อ)
                 const cGeo = new THREE.BoxGeometry(colSize, stubHeight, colSize);
                 const cMesh = new THREE.Mesh(cGeo, concreteMat);
                 cMesh.position.set(posX, type.h - 0.2 + stubHeight/2, posZ);
                 cMesh.castShadow = true;
                 concreteGroup.add(cMesh);
 
-                // Floor 1 Column Concrete (เสาชั้น 1: จากคานคอดิน ถึง คานชั้น 2)
                 const col1Geo = new THREE.BoxGeometry(colSize, floorHeight, colSize);
                 const col1Mesh = new THREE.Mesh(col1Geo, concreteMat);
                 col1Mesh.position.set(posX, type.h - 0.2 + stubHeight + floorHeight/2, posZ);
                 col1Mesh.castShadow = true;
                 concreteGroup.add(col1Mesh);
 
-                // Floor 2 Column Concrete (เสาชั้น 2: จากคานชั้น 2 ถึง คานอะเสหลังคา)
                 const col2Geo = new THREE.BoxGeometry(colSize, floorHeight, colSize);
                 const col2Mesh = new THREE.Mesh(col2Geo, concreteMat);
                 col2Mesh.position.set(posX, type.h - 0.2 + stubHeight + floorHeight + floorHeight/2, posZ);
@@ -728,7 +716,6 @@
                 fMesh.userData = { isBeam: false, ...item, typeData: type };
                 interactiveObjects.push(fMesh);
 
-                // Rebar Subgroups
                 const rebarSubGroup = new THREE.Group();
                 const pTieSubGroup = new THREE.Group();
 
@@ -737,7 +724,6 @@
                 const tieMat = isMetallicMode ? metallicRebarMat : tieRebarMat;
                 const pTieMat = isMetallicMode ? metallicRebarMat : perimTieMat;
 
-                // Footing Mesh
                 const meshNum = parseInt(type.meshSpec.split('+')[0]);
                 const radiusMesh = type.meshSpec.includes('DB16') ? 0.008 : 0.006;
                 const stepX = (type.b - 2 * cover) / (meshNum - 1);
@@ -762,22 +748,18 @@
                     rebarSubGroup.add(barMesh);
                 }
 
-                // Perimeter Side Tie (แก้ไขให้หมุนนอนราบไม่เอียง)
-                const pTieRadius = 0.0045;
-                const pTieW = type.b - 2 * cover - 0.01;
-                const pTieL = type.l - 2 * cover - 0.01;
-                const pTieY = -0.2 + (type.h / 2);
-                
-                const perimGeo = createPerimeterTieGeometry(pTieW, pTieL, pTieRadius, pTieRadius * 3);
+                // --- Perimeter Horizontal Side Tie (ปรับตำแหน่งให้อยู่เกือบถึงปลายด้านบนของเหล็กที่ดัดงอขึ้น) ---
+                const pTieRadius = 0.0045; // RB9
+                const pTieW = type.b - 2 * cover;
+                const pTieL = type.l - 2 * cover;
+                // ยกขึ้นไปเกือบถึงส่วนบนของตะแกรงที่ดัดงอขึ้นมา (สูงเกือบเท่าความสูงของ hookH)
+                const pTieY = -0.2 + cover + hookH - 0.02;
+
+                const perimGeo = createPerimeterHorizontalTieGeometry(pTieW, pTieL, pTieRadius, pTieRadius * 3);
                 const perimMesh = new THREE.Mesh(perimGeo, pTieMat);
-                
-                // หมุนแกน X ให้เหล็กรัดรอบนอนราบขนานไปกับฐานราก
-                perimMesh.rotation.x = Math.PI / 2;
-                
                 perimMesh.position.set(posX, pTieY, posZ);
                 pTieSubGroup.add(perimMesh);
 
-                // Column Main Dowels
                 const mainBarNum = parseInt(type.mainBar.split('-')[0]);
                 const radiusMain = type.mainBar.includes('DB16') ? 0.008 : 0.006;
                 const colCover = 0.03;
@@ -800,7 +782,6 @@
                     rebarSubGroup.add(colBarMesh);
                 });
 
-                // Column Stirrups
                 const tieRadius = 0.003;
                 const tiePitch = 0.20;
                 const tieCount = Math.floor((stubHeight + floorHeight*2) / tiePitch);
@@ -819,7 +800,7 @@
                 perimTieGroup.add(pTieSubGroup);
             });
 
-            // 2. Build Beams 3D Model & Rebar Cages
+            // 2. Build Beams (Complete with Level 1, 2, 3)
             buildBeamsStructure3D();
         }
 
@@ -841,13 +822,13 @@
                 let levelY = 0;
                 let targetGroup = beams1Group;
                 if (bData.level === 1) {
-                    levelY = -0.2 + stubHeight; // Ground Beams Y
+                    levelY = -0.2 + stubHeight;
                     targetGroup = beams1Group;
                 } else if (bData.level === 2) {
-                    levelY = -0.2 + stubHeight + floorHeight; // Floor 2 Beams Y
+                    levelY = -0.2 + stubHeight + floorHeight;
                     targetGroup = beams2Group;
                 } else {
-                    levelY = -0.2 + stubHeight + floorHeight * 2; // Roof Beams Y
+                    levelY = -0.2 + stubHeight + floorHeight * 2;
                     targetGroup = roofBeamsGroup;
                 }
 
@@ -855,7 +836,6 @@
                 const centerZ = (z1 + z2) / 2;
                 const centerY = levelY + bSpec.h / 2;
 
-                // Beam Concrete Mesh
                 const bGeo = new THREE.BoxGeometry(bSpec.w, bSpec.h, len);
                 const bMesh = new THREE.Mesh(bGeo, beamConcreteMat);
                 bMesh.position.set(centerX, centerY, centerZ);
@@ -866,70 +846,58 @@
                 interactiveObjects.push(bMesh);
                 targetGroup.add(bMesh);
 
-                // --- Beam Rebar Cage 3D ---
-                const beamCageGroup = new THREE.Group();
-                const bRebarMat = isMetallicMode ? metallicRebarMat : beamRebarMat;
-                const tieMat = isMetallicMode ? metallicRebarMat : tieRebarMat;
+                if(bData.level <= 2) {
+                    const beamCageGroup = new THREE.Group();
+                    const bRebarMat = isMetallicMode ? metallicRebarMat : beamRebarMat;
+                    const tieMat = isMetallicMode ? metallicRebarMat : tieRebarMat;
 
-                const topNum = parseInt(bSpec.top.split('-')[0]);
-                const botNum = parseInt(bSpec.bot.split('-')[0]);
-                const topDB = bSpec.top.split('-')[1];
-                const botDB = bSpec.bot.split('-')[1];
+                    const topNum = parseInt(bSpec.top.split('-')[0]);
+                    const botNum = parseInt(bSpec.bot.split('-')[0]);
+                    const topDB = bSpec.top.split('-')[1];
+                    const botDB = bSpec.bot.split('-')[1];
 
-                const topRadius = topDB.includes('20') ? 0.010 : (topDB.includes('16') ? 0.008 : 0.006);
-                const botRadius = botDB.includes('20') ? 0.010 : (botDB.includes('16') ? 0.008 : 0.006);
+                    const topRadius = topDB.includes('20') ? 0.010 : (topDB.includes('16') ? 0.008 : 0.006);
+                    const botRadius = botDB.includes('20') ? 0.010 : (botDB.includes('16') ? 0.008 : 0.006);
+                    const stirrupPitch = parseFloat(bSpec.stirrup.split('@')[1]) || 0.20;
+                    const stirrupCount = Math.floor((len - 2*bCover) / stirrupPitch);
 
-                const stirrupPitch = parseFloat(bSpec.stirrup.split('@')[1]) || 0.20;
-                const stirrupCount = Math.floor((len - 2*bCover) / stirrupPitch);
+                    const innerW = bSpec.w - 2*bCover;
+                    const innerH = bSpec.h - 2*bCover;
 
-                const innerW = bSpec.w - 2*bCover;
-                const innerH = bSpec.h - 2*bCover;
+                    for (let i = 0; i < topNum; i++) {
+                        const stepW = topNum > 1 ? (innerW / (topNum - 1)) : 0;
+                        const offsetX = -innerW/2 + i * stepW;
+                        const path = new THREE.LineCurve3(new THREE.Vector3(offsetX, innerH/2, -len/2 + bCover), new THREE.Vector3(offsetX, innerH/2, len/2 - bCover));
+                        beamCageGroup.add(new THREE.Mesh(new THREE.TubeGeometry(path, 16, topRadius, 6, false), bRebarMat));
+                    }
 
-                // Top Bars
-                for (let i = 0; i < topNum; i++) {
-                    const stepW = topNum > 1 ? (innerW / (topNum - 1)) : 0;
-                    const offsetX = -innerW/2 + i * stepW;
-                    const path = new THREE.LineCurve3(
-                        new THREE.Vector3(offsetX, innerH/2, -len/2 + bCover),
-                        new THREE.Vector3(offsetX, innerH/2, len/2 - bCover)
-                    );
-                    const barGeo = new THREE.TubeGeometry(path, 16, topRadius, 6, false);
-                    const barMesh = new THREE.Mesh(barGeo, bRebarMat);
-                    beamCageGroup.add(barMesh);
+                    for (let i = 0; i < botNum; i++) {
+                        const stepW = botNum > 1 ? (innerW / (botNum - 1)) : 0;
+                        const offsetX = -innerW/2 + i * stepW;
+                        const path = new THREE.LineCurve3(new THREE.Vector3(offsetX, -innerH/2, -len/2 + bCover), new THREE.Vector3(offsetX, -innerH/2, len/2 - bCover));
+                        beamCageGroup.add(new THREE.Mesh(new THREE.TubeGeometry(path, 16, botRadius, 6, false), bRebarMat));
+                    }
+
+                    const tieRadius = 0.003;
+                    for (let k = 0; k <= stirrupCount; k++) {
+                        const offsetZ = -len/2 + bCover + k * stirrupPitch;
+                        const stMesh = new THREE.Mesh(createSeismicStirrup135Geometry(innerW, innerH, tieRadius, tieRadius * 2), tieMat);
+                        stMesh.rotation.x = Math.PI / 2;
+                        stMesh.position.set(0, 0, offsetZ);
+                        beamCageGroup.add(stMesh);
+                    }
+
+                    beamCageGroup.position.set(centerX, centerY, centerZ);
+                    beamCageGroup.rotation.y = angle;
+                    beamRebarGroup.add(beamCageGroup);
                 }
-
-                // Bottom Bars
-                for (let i = 0; i < botNum; i++) {
-                    const stepW = botNum > 1 ? (innerW / (botNum - 1)) : 0;
-                    const offsetX = -innerW/2 + i * stepW;
-                    const path = new THREE.LineCurve3(
-                        new THREE.Vector3(offsetX, -innerH/2, -len/2 + bCover),
-                        new THREE.Vector3(offsetX, -innerH/2, len/2 - bCover)
-                    );
-                    const barGeo = new THREE.TubeGeometry(path, 16, botRadius, 6, false);
-                    const barMesh = new THREE.Mesh(barGeo, bRebarMat);
-                    beamCageGroup.add(barMesh);
-                }
-
-                // Beam Stirrups (RB6)
-                const tieRadius = 0.003; // RB6
-                for (let k = 0; k <= stirrupCount; k++) {
-                    const offsetZ = -len/2 + bCover + k * stirrupPitch;
-                    const stGeo = createSeismicStirrup135Geometry(innerW, innerH, tieRadius, tieRadius * 2);
-                    const stMesh = new THREE.Mesh(stGeo, tieMat);
-                    stMesh.rotation.x = Math.PI / 2;
-                    stMesh.position.set(0, 0, offsetZ);
-                    beamCageGroup.add(stMesh);
-                }
-
-                beamCageGroup.position.set(centerX, centerY, centerZ);
-                beamCageGroup.rotation.y = angle;
-                beamRebarGroup.add(beamCageGroup);
             });
         }
 
+        // คงเส้นตาราง (Grid Lines) สีฟ้าไว้ครบถ้วน
         function createGroundAndGrid() {
             clearGroup(gridGroup);
+            
             const gridHelper = new THREE.GridHelper(20, 20, 0x0284c7, 0x334155);
             gridHelper.position.y = -0.35;
             gridGroup.add(gridHelper);
@@ -980,7 +948,6 @@
 
             const breakdownData = [];
 
-            // 1. Calculate Footings & Columns
             foundationData.forEach(item => {
                 const t = footingTypes[item.type];
                 const cover = 0.04;
@@ -994,23 +961,19 @@
                 totalVolConc += (volFooting + volColumn);
                 totalFormworkArea += (footingForm + columnForm);
 
-                // Mesh Length
                 const meshNum = parseInt(t.meshSpec.split('+')[0]);
                 const isDB16Mesh = t.meshSpec.includes('DB16');
                 const meshBarLen = (t.b - 2*cover) + 2 * (t.h - 2*cover);
                 const totalMeshLen = (meshNum * 2) * meshBarLen;
 
-                // Perimeter Tie Length
                 const perimLen = 2 * (t.b - 2*cover + t.l - 2*cover) + 0.15;
                 const wPerim = perimLen * REBAR_WEIGHT['RB9'];
 
-                // Column Main
                 const mainNum = parseInt(t.mainBar.split('-')[0]);
                 const isDB16Main = t.mainBar.includes('DB16');
                 const dowelLen = (stubHeight + floorHeight*2 + t.h) + (t.b * 0.35);
                 const totalMainLen = mainNum * dowelLen;
 
-                // Stirrups
                 const tiePitch = 0.20;
                 const tieCount = Math.floor((stubHeight + floorHeight*2) / tiePitch) + 1;
                 const singleTiePerimeter = 4 * (0.20 - 2*colCover) + 0.10;
@@ -1038,7 +1001,6 @@
                 });
             });
 
-            // 2. Calculate Beams BOQ
             beamsPlanData.forEach(bData => {
                 const bSpec = beamTypes[bData.type];
                 const x1 = gridX[bData.x1];
@@ -1053,7 +1015,6 @@
                 totalVolConc += volBeam;
                 totalFormworkArea += formBeam;
 
-                // Top & Bottom Rebars
                 const topNum = parseInt(bSpec.top.split('-')[0]);
                 const botNum = parseInt(bSpec.bot.split('-')[0]);
                 const topDB = bSpec.top.split('-')[1];
@@ -1073,7 +1034,6 @@
                 else if (botDB === 'DB16') totalWeightDB16 += wBot;
                 else totalWeightDB12 += wBot;
 
-                // Beam Stirrups (RB6)
                 const pitch = parseFloat(bSpec.stirrup.split('@')[1]) || 0.20;
                 const stirrupCount = Math.floor(len / pitch) + 1;
                 const stirrupPerimeter = 2 * (bSpec.w - 0.05 + bSpec.h - 0.05) + 0.10;
@@ -1093,7 +1053,7 @@
             const totalSteelKg = db12Wasted + db16Wasted + db20Wasted + rb6Wasted + rb9Wasted;
 
             const items = [
-                { name: '1. คอนกรีตโครงสร้าง 240 ksc (ฐานราก, เสา, คานชั้น 1-2 และคานอะเส) [เผื่อ 5%]', qty: concWasted, unit: 'ลบ.ม.', price: pConc },
+                { name: '1. คอนกรีตโครงสร้าง 240 ksc (ฐานราก, เสา, คาน) [เผื่อ 5%]', qty: concWasted, unit: 'ลบ.ม.', price: pConc },
                 { name: '2. เหล็กข้ออ้อย DB12 (ตะแกรงฐานราก, เสา, คาน B1, BX, RB1) [เผื่อ 10%]', qty: db12Wasted, unit: 'กก.', price: pSteelDB },
                 { name: '3. เหล็กข้ออ้อย DB16 (คาน B2, B3, B3X, B4, B4X) [เผื่อ 10%]', qty: db16Wasted, unit: 'กก.', price: pSteelDB },
                 { name: '4. เหล็กข้ออ้อย DB20 (คานรับน้ำหนักพิเศษ B5) [เผื่อ 10%]', qty: db20Wasted, unit: 'กก.', price: pSteelDB },
@@ -1165,7 +1125,6 @@
             });
         }
 
-        // --- 6. CONTROLS & EVENT HANDLERS ---
         function updateConcreteOpacity(val) {
             concreteOpacity = val / 100;
             if(concreteMat) concreteMat.opacity = concreteOpacity;
@@ -1212,9 +1171,8 @@
                         <div class="flex justify-between"><span>เหล็กบน (Top):</span> <span class="font-mono text-amber-300">${data.spec.top}</span></div>
                         <div class="flex justify-between"><span>เหล็กล่าง (Bottom):</span> <span class="font-mono text-orange-400">${data.spec.bot}</span></div>
                         <div class="flex justify-between"><span>เหล็กปลอกคาน:</span> <span class="font-mono text-yellow-300">${data.spec.stirrup}</span></div>
-                        <div class="flex justify-between"><span>ปริมาตรคอนกรีต:</span> <span class="font-mono text-sky-400">${(data.spec.w * data.spec.h * data.len).toFixed(3)} m³</span></div>
                     `;
-                } else {
+                } else if(data.typeData) {
                     const typeInfo = data.typeData;
                     document.getElementById('card-tag').innerText = data.type;
                     document.getElementById('card-grid').innerText = `ตำแหน่ง Grid: ${data.grid} (เสา ${data.col})`;
@@ -1224,11 +1182,8 @@
                         <div class="flex justify-between"><span>เหล็กตะแกรงฐานราก:</span> <span class="font-mono text-sky-300">${typeInfo.meshSpec}</span></div>
                         <div class="flex justify-between"><span>เหล็กรัดรอบฐานราก:</span> <span class="font-mono text-pink-400">${typeInfo.perimTie}</span></div>
                         <div class="flex justify-between"><span>เหล็กแกนเสาตอม่อ:</span> <span class="font-mono text-amber-300">${typeInfo.mainBar}</span></div>
-                        <div class="flex justify-between"><span>เหล็กปลอกเสา:</span> <span class="font-mono text-yellow-300">${typeInfo.tieSpec}</span></div>
-                        <div class="flex justify-between"><span>คอนกรีตฐานราก:</span> <span class="font-mono text-white">${(typeInfo.b * typeInfo.l * typeInfo.h).toFixed(3)} m³</span></div>
                     `;
                 }
-
                 card.classList.remove('hidden');
             }
         }
@@ -1240,10 +1195,8 @@
         function onParameterChange() {
             const valStub = parseFloat(document.getElementById('param-stub-height').value);
             const valFloor = parseFloat(document.getElementById('param-floor-height').value);
-
             if (!isNaN(valStub) && valStub > 0) stubHeight = valStub;
             if (!isNaN(valFloor) && valFloor > 0) floorHeight = valFloor;
-
             buildCompleteModel();
             calculateBOQ();
         }
@@ -1271,14 +1224,11 @@
         function resetAllDefaults() {
             document.getElementById('concrete-opacity').value = 35;
             updateConcreteOpacity(35);
-            document.getElementById('toggle-rebars').checked = true; toggleLayer('rebars', true);
-            document.getElementById('toggle-beam-rebars').checked = true; toggleLayer('beamRebars', true);
-            document.getElementById('toggle-perim-ties').checked = true; toggleLayer('perimTies', true);
-            document.getElementById('toggle-concrete').checked = true; toggleLayer('concrete', true);
-            document.getElementById('toggle-beams-1').checked = true; toggleLayer('beams1', true);
-            document.getElementById('toggle-beams-2').checked = true; toggleLayer('beams2', true);
-            document.getElementById('toggle-roof-beams').checked = true; toggleLayer('roofBeams', true);
-            document.getElementById('toggle-grid').checked = true; toggleLayer('grid', true);
+            ['rebars', 'beamRebars', 'perimTies', 'concrete', 'beams1', 'beams2', 'roofBeams', 'grid'].forEach(l => {
+                const el = document.getElementById(`toggle-${l === 'beamRebars' ? 'beam-rebars' : (l === 'perimTies' ? 'perim-ties' : (l === 'beams1' ? 'beams-1' : (l === 'beams2' ? 'beams-2' : (l === 'roofBeams' ? 'roof-beams' : l))))}`);
+                if(el) el.checked = true;
+                toggleLayer(l, true);
+            });
             document.getElementById('param-stub-height').value = 1.5;
             document.getElementById('param-floor-height').value = 3.5;
             stubHeight = 1.5;
@@ -1289,20 +1239,18 @@
 
         function clearGroup(group) {
             while(group.children.length > 0){
-                const obj = group.children[0];
-                group.remove(obj);
+                group.remove(group.children[0]);
             }
         }
 
         function exportToCSV() {
             let csv = '\uFEFFลำดับ,รายการวัสดุ,ปริมาณ,หน่วย,ราคา/หน่วย(บาท),จำนวนเงิน(บาท)\n';
-            const rows = document.querySelectorAll('#boq-table-body tr');
-            rows.forEach(row => {
+            document.querySelectorAll('#boq-table-body tr').forEach(row => {
                 const cols = row.querySelectorAll('td');
-                const rowData = Array.from(cols).map(c => `"${c.innerText.trim()}"`).join(',');
-                csv += rowData + '\n';
+                if(cols.length > 0) {
+                    csv += Array.from(cols).map(c => `"${c.innerText.trim()}"`).join(',') + '\n';
+                }
             });
-
             const link = document.createElement('a');
             link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
             link.setAttribute('download', 'Full_Structural_Rebar_BOQ.csv');
@@ -1317,7 +1265,6 @@
             const w = container.clientWidth;
             const h = container.clientHeight;
             if (w === 0 || h === 0) return;
-
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
